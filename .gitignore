@@ -1,4 +1,12 @@
 node_modules
+dist
+coverage
+.pnpm-store
+playwright-report
+test-results
+.playwright-mcp
 yarn-error.log
 .parcel-cache
-dist
+.DS_Store
+*.code-workspace
+pptx-sample.pptx

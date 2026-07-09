@@ -1,0 +1,11 @@
+export const SLIDE_WIDTH = 1600;
+export const SLIDE_HEIGHT = 900;
+export const SLIDE_RATIO = SLIDE_WIDTH / SLIDE_HEIGHT;
+export const SLIDE_TITLE_HEIGHT = 96;
+export const SLIDE_CONTENT_Y = SLIDE_TITLE_HEIGHT;
+export const SLIDE_CONTENT_HEIGHT = SLIDE_HEIGHT - SLIDE_TITLE_HEIGHT;
+export const PPTX_LAYOUT_NAME = "LAYOUT_WIDE";
+export const STORAGE_KEY = "excalidraw-slides.deck.v1";
+export const DECK_MIME_TYPE = "application/vnd.excalidraw-slides+json";
+export const FRAME_NAME_PREFIX = "__slide-frame__";
+export const APP_DEFAULT_BACKGROUND = "#ffffff";

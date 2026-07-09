@@ -1,0 +1,813 @@
+:root {
+  color-scheme: light;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  background: #ffffff;
+  color: #182127;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button,
+input {
+  border-radius: 14px;
+  border: 1px solid var(--workspace-panel-border);
+}
+
+button {
+  cursor: pointer;
+  background: var(--workspace-button-bg);
+  color: var(--workspace-button-text);
+  padding: 0.62rem 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.2;
+  transition: transform 140ms ease, opacity 140ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+}
+
+button.ghost {
+  background: var(--workspace-button-ghost-bg);
+  color: var(--workspace-button-ghost-text);
+}
+
+button.active-toggle {
+  background: var(--workspace-button-active-bg);
+  color: var(--workspace-button-active-text);
+}
+
+input,
+textarea {
+  width: 100%;
+  background: var(--workspace-input-bg);
+  color: var(--workspace-input-text);
+  padding: 0.85rem 1rem;
+}
+
+textarea {
+  min-height: 220px;
+  resize: vertical;
+}
+
+.app-shell {
+  --workspace-bg: #ffffff;
+  --workspace-panel-bg: #ffffff;
+  --workspace-panel-text: #182127;
+  --workspace-panel-muted: #5f7178;
+  --workspace-panel-label: #55717b;
+  --workspace-panel-border: rgba(24, 33, 39, 0.12);
+  --workspace-input-bg: var(--workspace-panel-bg);
+  --workspace-input-text: var(--workspace-panel-text);
+  --workspace-button-bg: #182127;
+  --workspace-button-text: #fff9ef;
+  --workspace-button-ghost-bg: var(--workspace-panel-bg);
+  --workspace-button-ghost-text: #182127;
+  --workspace-button-active-bg: linear-gradient(135deg, #182127, #375661);
+  --workspace-button-active-text: #fff8ef;
+  --workspace-card-bg: var(--workspace-panel-bg);
+  --workspace-card-text: var(--workspace-panel-text);
+  --workspace-card-active-bg: linear-gradient(135deg, #182127, #375661);
+  --workspace-card-active-text: #fff8ef;
+  --workspace-overlay-bg: rgba(24, 33, 39, 0.92);
+  --workspace-overlay-text: #fff9ef;
+  display: grid;
+  grid-template-columns: 380px minmax(0, 1fr);
+  min-height: 100vh;
+  gap: 0;
+  padding: 0;
+  background: var(--workspace-bg);
+  border-radius: 0;
+  backdrop-filter: none;
+  box-shadow: none;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.app-shell.theme-dark {
+  color-scheme: dark;
+  --workspace-panel-bg: #17171c;
+  --workspace-panel-text: #f3f1ea;
+  --workspace-panel-muted: #b9b7c4;
+  --workspace-panel-label: #8d99a6;
+  --workspace-panel-border: rgba(255, 255, 255, 0.1);
+  --workspace-input-bg: #202028;
+  --workspace-input-text: #f3f1ea;
+  --workspace-button-bg: #2a2f3a;
+  --workspace-button-text: #f7f4ee;
+  --workspace-button-ghost-bg: #202028;
+  --workspace-button-ghost-text: #f3f1ea;
+  --workspace-button-active-bg: linear-gradient(135deg, #56697a, #32424e);
+  --workspace-button-active-text: #ffffff;
+  --workspace-card-bg: #202028;
+  --workspace-card-text: #f3f1ea;
+  --workspace-card-active-bg: linear-gradient(135deg, #405765, #2d404b);
+  --workspace-card-active-text: #ffffff;
+  --workspace-overlay-bg: rgba(32, 32, 40, 0.96);
+  --workspace-overlay-text: #f7f4ee;
+}
+
+.app-shell.sidebar-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+
+.app-shell.sidebar-collapsed .sidebar {
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100vh;
+  min-width: 0;
+  padding: 1rem 1rem 1rem 1.25rem;
+  border-inline-end: 1px solid var(--workspace-panel-border);
+  background: var(--workspace-panel-bg);
+  color: var(--workspace-panel-text);
+  position: relative;
+  z-index: 200;
+  isolation: isolate;
+  box-shadow: none;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+}
+
+.sidebar-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-height: 0;
+  overflow: auto;
+  padding-inline-end: 0.5rem;
+}
+
+.sidebar-toggle,
+.sidebar-reveal {
+  border-radius: 999px;
+  min-height: 2.5rem;
+  padding-inline: 0.9rem;
+}
+
+.sidebar-toggle {
+  min-width: 2.5rem;
+  padding-inline: 0;
+  flex: 0 0 auto;
+}
+
+.sidebar-reveal {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 5;
+  background: var(--workspace-overlay-bg);
+  color: var(--workspace-overlay-text);
+  min-width: 2.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.eyebrow,
+.label,
+.panel-title,
+.muted {
+  letter-spacing: 0.03em;
+}
+
+.eyebrow,
+.label,
+.panel-title {
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--workspace-panel-label);
+}
+
+.muted {
+  color: var(--workspace-panel-muted);
+  font-size: 0.92rem;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.action-group {
+  gap: 0.35rem;
+}
+
+.slide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.slide-card {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr;
+  gap: 0.65rem;
+  text-align: left;
+  align-items: center;
+  background: var(--workspace-card-bg);
+  color: var(--workspace-card-text);
+  min-height: 3.1rem;
+}
+
+.slide-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.slide-meta small {
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.slide-card.active {
+  background: var(--workspace-card-active-bg);
+  color: var(--workspace-card-active-text);
+}
+
+.button-row,
+.button-grid {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.button-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.button-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.editor-shell {
+  min-width: 0;
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  overflow: clip;
+  background: var(--workspace-bg);
+}
+
+.editor-frame {
+  height: 100vh;
+  overflow: hidden;
+  min-width: 0;
+  background: var(--workspace-bg);
+  position: relative;
+  z-index: 0;
+}
+
+.editor-frame .excalidraw {
+  --color-primary: #1f6f78;
+  --color-surface-low: rgba(255, 255, 255, 0.94);
+  background: var(--workspace-bg);
+}
+
+.app-shell.theme-dark .editor-frame .excalidraw {
+  --color-surface-low: #24242d;
+  --color-surface-mid: #2b2b35;
+  --color-surface-high: #363541;
+}
+
+.editor-frame .excalidraw .Island {
+  box-shadow: none;
+  border: 1px solid var(--workspace-panel-border);
+}
+
+.editor-frame .excalidraw .App-menu_top__left {
+  display: flex;
+}
+
+.editor-frame .excalidraw .App-menu_top {
+  padding-inline: 1rem;
+}
+
+.editor-frame .excalidraw .layer-ui__wrapper__top-right {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  top: 0.75rem;
+  right: 1rem;
+  max-width: calc(100vw - 2rem);
+}
+
+.editor-frame .excalidraw .default-sidebar-trigger {
+  display: none;
+}
+
+.editor-frame .excalidraw .library-menu-browse-button {
+  display: none;
+}
+
+.local-library-trigger {
+  border: 1px solid var(--workspace-panel-border);
+  border-radius: 16px;
+  background: var(--workspace-panel-bg);
+  color: var(--workspace-panel-text);
+  min-height: 2.75rem;
+  padding: 0.7rem 1rem;
+  box-shadow: none;
+}
+
+.local-library-trigger:hover {
+  background: var(--workspace-input-bg);
+}
+
+.app-shell.theme-dark .editor-frame .excalidraw .dropdown-menu-button,
+.app-shell.theme-dark .editor-frame .excalidraw .zoom-button,
+.app-shell.theme-dark .editor-frame .excalidraw .undo-redo-buttons button,
+.app-shell.theme-dark .editor-frame .excalidraw .reset-zoom-button,
+.app-shell.theme-dark .sidebar-reveal {
+  background-color: var(--color-surface-low) !important;
+  color: var(--workspace-panel-text) !important;
+  border-color: var(--workspace-panel-border) !important;
+}
+
+.app-shell.theme-dark .editor-frame .excalidraw .zoom-actions,
+.app-shell.theme-dark .editor-frame .excalidraw .undo-redo-buttons {
+  background-color: var(--color-surface-mid);
+  box-shadow: 0 0 0 1px var(--workspace-panel-border);
+}
+
+.editor-frame .excalidraw .layer-ui__wrapper__footer-left,
+.editor-frame .excalidraw .layer-ui__wrapper__footer-right {
+  bottom: 1rem;
+}
+
+.app-shell.sidebar-collapsed .editor-frame .excalidraw .App-menu_top {
+  padding-inline-start: 1rem;
+}
+
+.app-shell.sidebar-collapsed .sidebar-reveal {
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+@media (min-width: 1101px) {
+  .editor-frame .excalidraw .App-menu_top {
+    padding: 0.75rem 1rem 0;
+    justify-content: space-between;
+  }
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--workspace-overlay-bg) 44%, transparent);
+  padding: 1rem;
+  z-index: 400;
+}
+
+.modal-card {
+  width: min(760px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 28px;
+  background: var(--workspace-panel-bg);
+  color: var(--workspace-panel-text);
+  border: 1px solid var(--workspace-panel-border);
+  box-shadow: 0 25px 80px color-mix(in srgb, var(--workspace-overlay-bg) 28%, transparent);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+@media (max-width: 1100px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    border-radius: 0;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .sidebar {
+    height: auto;
+    border-inline-end: 0;
+    border-block-end: 1px solid rgba(24, 33, 39, 0.09);
+    padding: 1rem;
+    overflow: visible;
+  }
+
+  .app-shell.sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar {
+    display: none;
+  }
+
+  .editor-frame {
+    height: 70vh;
+  }
+
+  .sidebar-reveal {
+    left: 0.75rem;
+    top: auto;
+    bottom: 1rem;
+    transform: none;
+  }
+}
+
+.editor-frame .excalidraw .selected-shape-actions {
+  top: 5.5rem;
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(82rem, calc(100vw - 1.5rem));
+  max-width: calc(100vw - 1.5rem);
+  z-index: calc(var(--zIndex-layerUI) + 2);
+  pointer-events: var(--ui-pointerEvents);
+}
+
+.editor-frame .excalidraw .App-menu__left {
+  position: static;
+  inset: auto;
+  transform: none;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(17rem, calc(100vh - 7rem));
+  --popup-button-size: 2.25rem;
+  padding: 0.75rem 0.9rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn {
+  display: grid !important;
+  grid-template-columns: repeat(16, minmax(0, 1fr));
+  grid-auto-flow: row;
+  gap: 0.7rem 0.9rem;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.editor-frame .excalidraw .App-menu__left .Stack,
+.editor-frame .excalidraw .App-menu__left .Stack_vertical {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 0.9rem;
+  align-items: flex-start;
+  align-content: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > * {
+  display: flex;
+  flex-direction: column;
+  width: 100% !important;
+  min-width: 9rem;
+  max-width: 100%;
+  margin: 0;
+  align-self: start;
+  grid-column: span 2;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn h3,
+.editor-frame .excalidraw .App-menu__left .panelColumn legend,
+.editor-frame .excalidraw .App-menu__left .panelColumn .control-label {
+  margin-bottom: 0.18rem;
+  font-size: 0.72rem;
+  line-height: 1.15;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > div,
+.editor-frame .excalidraw .App-menu__left .panelColumn > fieldset,
+.editor-frame .excalidraw .App-menu__left .panelColumn > label {
+  width: 100% !important;
+  max-width: none;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > .dropdown-menu-item {
+  min-width: 11rem;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(1) {
+  grid-column: 1 / span 3;
+  grid-row: 1;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(2) {
+  grid-column: 4 / span 3;
+  grid-row: 1;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(3) {
+  grid-column: 7 / span 2;
+  grid-row: 1;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(4) {
+  grid-column: 9 / span 2;
+  grid-row: 1;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(5) {
+  grid-column: 11 / span 2;
+  grid-row: 1;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(6) {
+  grid-column: 13 / span 2;
+  grid-row: 1;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(7) {
+  grid-column: 15 / span 2;
+  grid-row: 1;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(8) {
+  grid-column: 1 / span 3;
+  grid-row: 2;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(9) {
+  grid-column: 4 / span 3;
+  grid-row: 2;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(10) {
+  grid-column: 7 / span 2;
+  grid-row: 2;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(11) {
+  grid-column: 9 / span 2;
+  grid-row: 2;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(12) {
+  grid-column: 11 / span 2;
+  grid-row: 2;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(13),
+.editor-frame .excalidraw .App-menu__left .panelColumn > label.control-label {
+  grid-column: 13 / span 4;
+  grid-row: 2;
+  min-width: 16rem;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(14) {
+  grid-column: 1 / span 3;
+  grid-row: 3;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(15) {
+  grid-column: 5 / span 4;
+  grid-row: 3;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(16) {
+  grid-column: 11 / span 3;
+  grid-row: 3;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(14),
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(15),
+.editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(16) {
+  width: max-content !important;
+  min-width: 0;
+  max-width: none;
+}
+
+.editor-frame .excalidraw .App-menu__left .Stack > *,
+.editor-frame .excalidraw .App-menu__left .Stack_vertical > * {
+  flex: 0 0 auto;
+  width: fit-content;
+  min-width: 9rem;
+  max-width: 100%;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn fieldset,
+.editor-frame .excalidraw .App-menu__left .panelColumn > div,
+.editor-frame .excalidraw .App-menu__left .panelColumn > label {
+  gap: 0.2rem;
+}
+
+.editor-frame .excalidraw .App-menu__left .panelColumn .buttonList,
+.editor-frame .excalidraw .App-menu__left .panelColumn .dropdown-menu-item,
+.editor-frame .excalidraw .App-menu__left .panelColumn .stack {
+  margin: 0;
+}
+
+.editor-frame .excalidraw .App-menu__left .buttonList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.32rem;
+  padding: 0.05rem 0 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.editor-frame .excalidraw .App-menu__left .buttonList label,
+.editor-frame .excalidraw .App-menu__left .buttonList button,
+.editor-frame .excalidraw .App-menu__left .buttonList .zIndexButton {
+  flex: 0 0 auto;
+  width: var(--popup-button-size);
+}
+
+.editor-frame .excalidraw .App-menu__left .buttonList label,
+.editor-frame .excalidraw .App-menu__left .buttonList button,
+.editor-frame .excalidraw .App-menu__left .buttonList .zIndexButton,
+.editor-frame .excalidraw .App-menu__left .standalone {
+  --button-width: var(--popup-button-size);
+  --button-height: var(--popup-button-size);
+  min-width: var(--popup-button-size);
+  padding-inline: 0;
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(input[data-testid^="fontSize-"]) .buttonList {
+  display: grid;
+  grid-template-columns: repeat(4, var(--popup-button-size));
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(input[name="text-align"]) .buttonList,
+.editor-frame .excalidraw .App-menu__left fieldset:has(input[data-testid^="align-"]) .buttonList {
+  display: grid;
+  grid-template-columns: repeat(3, var(--popup-button-size));
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(input[name="arrowtypes"]) .buttonList,
+.editor-frame .excalidraw .App-menu__left fieldset:has(input[name="edges"]) .buttonList,
+.editor-frame .excalidraw .App-menu__left fieldset:has(input[name="sloppiness"]) .buttonList,
+.editor-frame .excalidraw .App-menu__left fieldset:has(input[name="strokeStyle"]) .buttonList,
+.editor-frame .excalidraw .App-menu__left fieldset:has(input[name="stroke-width"]) .buttonList {
+  display: grid;
+  grid-template-columns: repeat(3, var(--popup-button-size));
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(input[name="edges"]) .buttonList,
+.editor-frame .excalidraw .App-menu__left fieldset:has(input[name="arrowheads"]) .buttonList {
+  grid-template-columns: repeat(2, var(--popup-button-size));
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Send backward"]) .buttonList,
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Bring to front"]) .buttonList,
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Align left"]) .buttonList,
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Duplicate"]) .buttonList {
+  display: grid;
+  gap: 0.24rem;
+  width: max-content;
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(input[name="arrowheads"]) .buttonList {
+  display: grid;
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Send backward"]) .buttonList,
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Bring to front"]) .buttonList {
+  grid-template-columns: repeat(4, var(--popup-button-size));
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Align left"]) .buttonList {
+  grid-template-columns: repeat(4, var(--popup-button-size));
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Duplicate"]) .buttonList {
+  grid-template-columns: repeat(3, var(--popup-button-size));
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Align left"]) .buttonList > div[style*="flex-basis: 100%"] {
+  display: none !important;
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Align left"]) .buttonList > div[style*="display: flex"] {
+  display: contents !important;
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Send backward"]) .buttonList > *,
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Bring to front"]) .buttonList > *,
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Align left"]) .buttonList > *,
+.editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Duplicate"]) .buttonList > * {
+  width: var(--popup-button-size);
+}
+
+.editor-frame .excalidraw .App-menu__left .range-wrapper {
+  margin-top: 0.15rem;
+}
+
+.editor-frame .excalidraw .App-menu__left .value-bubble,
+.editor-frame .excalidraw .App-menu__left .zero-label {
+  font-size: 0.72rem;
+}
+
+@media (max-width: 640px) {
+  .editor-frame .excalidraw .selected-shape-actions {
+    top: 5rem;
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+  }
+
+  .editor-frame .excalidraw .App-menu__left {
+    max-height: min(18rem, calc(100vh - 6rem));
+    padding: 0.7rem;
+  }
+
+  .editor-frame .excalidraw .App-menu__left .panelColumn {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .editor-frame .excalidraw .App-menu__left .panelColumn > * {
+    min-width: 8rem;
+    max-width: 100%;
+    grid-column: span 2;
+    grid-row: auto;
+  }
+
+  .editor-frame .excalidraw .App-menu__left .panelColumn > div,
+  .editor-frame .excalidraw .App-menu__left .panelColumn > fieldset,
+  .editor-frame .excalidraw .App-menu__left .panelColumn > label {
+    grid-column: span 2 !important;
+  }
+
+  .editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(1),
+  .editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(2),
+  .editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(13),
+  .editor-frame .excalidraw .App-menu__left .panelColumn > label.control-label {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .sidebar {
+    padding: 0;
+    border: 0;
+  }
+
+  .sidebar-scroll {
+    padding-inline-end: 0;
+  }
+
+  .button-row,
+  .button-grid {
+    grid-template-columns: 1fr;
+  }
+}
