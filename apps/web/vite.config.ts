@@ -11,5 +11,16 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 4173,
+    watch: {
+      ignored: [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/playwright.config.ts",
+        "**/vitest.config.ts",
+        "**/coverage/**",
+      ],
+      usePolling: true,
+      interval: 250,
+    },
   },
 });

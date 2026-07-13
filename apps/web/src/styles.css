@@ -70,6 +70,7 @@ textarea {
 }
 
 .app-shell {
+  --workspace-sidebar-width: 380px;
   --workspace-bg: #ffffff;
   --workspace-panel-bg: #ffffff;
   --workspace-panel-text: #182127;
@@ -110,9 +111,9 @@ textarea {
   --workspace-panel-muted: #b9b7c4;
   --workspace-panel-label: #8d99a6;
   --workspace-panel-border: rgba(255, 255, 255, 0.1);
-  --workspace-input-bg: #202028;
+  --workspace-input-bg: #2a2b33;
   --workspace-input-text: #f3f1ea;
-  --workspace-button-bg: #2a2f3a;
+  --workspace-button-bg: #232832;
   --workspace-button-text: #f7f4ee;
   --workspace-button-ghost-bg: #202028;
   --workspace-button-ghost-text: #f3f1ea;
@@ -127,6 +128,7 @@ textarea {
 }
 
 .app-shell.sidebar-collapsed {
+  --workspace-sidebar-width: 0px;
   grid-template-columns: 0 minmax(0, 1fr);
 }
 
@@ -228,6 +230,57 @@ textarea {
   font-size: 0.92rem;
 }
 
+.error-text {
+  margin: 0;
+  color: #b23a2e;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.app-shell.theme-dark .error-text {
+  color: #ff9f8f;
+}
+
+.app-shell.theme-dark input,
+.app-shell.theme-dark textarea {
+  background: #c9c9ce;
+  color: #1a1a20;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.app-shell.theme-dark .sidebar {
+  background: #2e2f36;
+  border-inline-end-color: rgba(255, 255, 255, 0.08);
+}
+
+.app-shell.theme-dark .slide-card {
+  background: #3b5363;
+  color: #f3f1ea;
+}
+
+.app-shell.theme-dark .slide-card.active {
+  background: linear-gradient(135deg, #496276, #354a58);
+}
+
+.app-shell.theme-dark .button-row button,
+.app-shell.theme-dark .button-grid button {
+  background: #2a2e38;
+  color: #f3f1ea;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.app-shell.theme-dark .button-row button:disabled,
+.app-shell.theme-dark .button-grid button:disabled {
+  background: #3a3d46;
+  color: rgba(243, 241, 234, 0.68);
+}
+
+.app-shell.theme-dark button.ghost {
+  background: #252833;
+  color: #f3f1ea;
+}
+
 .stack {
   display: flex;
   flex-direction: column;
@@ -309,19 +362,34 @@ textarea {
 
 .editor-frame .excalidraw {
   --color-primary: #1f6f78;
-  --color-surface-low: rgba(255, 255, 255, 0.94);
+  --color-surface-low: rgba(255, 255, 255, 0.86);
   background: var(--workspace-bg);
 }
 
 .app-shell.theme-dark .editor-frame .excalidraw {
-  --color-surface-low: #24242d;
-  --color-surface-mid: #2b2b35;
-  --color-surface-high: #363541;
+  --color-surface-low: rgba(36, 36, 45, 0.84);
+  --color-surface-mid: rgba(43, 43, 53, 0.88);
+  --color-surface-high: rgba(54, 53, 65, 0.92);
 }
 
 .editor-frame .excalidraw .Island {
   box-shadow: none;
   border: 1px solid var(--workspace-panel-border);
+}
+
+.editor-frame .excalidraw .selected-shape-actions .Island {
+  background-color: color-mix(in srgb, var(--color-surface-low) 8%, transparent) !important;
+  border-color: color-mix(in srgb, var(--workspace-panel-border) 68%, transparent);
+  backdrop-filter: blur(2px) saturate(0.85);
+  box-shadow:
+    0 10px 28px color-mix(in srgb, #182127 8%, transparent),
+    0 0 0 1px color-mix(in srgb, #ffffff 18%, transparent);
+}
+
+.editor-frame .excalidraw .dropdown-menu,
+.editor-frame .excalidraw .popover {
+  background: color-mix(in srgb, var(--color-surface-low) 76%, transparent);
+  backdrop-filter: blur(14px);
 }
 
 .editor-frame .excalidraw .App-menu_top__left {
@@ -433,6 +501,7 @@ textarea {
 
 @media (max-width: 1100px) {
   .app-shell {
+    --workspace-sidebar-width: 0px;
     grid-template-columns: 1fr;
     border-radius: 0;
     min-height: 100vh;
@@ -468,12 +537,14 @@ textarea {
 }
 
 .editor-frame .excalidraw .selected-shape-actions {
-  top: 5.5rem;
+  top: 4.75rem;
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(82rem, calc(100vw - 1.5rem));
-  max-width: calc(100vw - 1.5rem);
+  left: calc(var(--workspace-sidebar-width) + 1rem);
+  right: 1rem;
+  margin-inline: auto;
+  transform: none;
+  width: min(96rem, calc(100vw - var(--workspace-sidebar-width) - 2rem));
+  max-width: calc(100vw - var(--workspace-sidebar-width) - 2rem);
   z-index: calc(var(--zIndex-layerUI) + 2);
   pointer-events: var(--ui-pointerEvents);
 }
@@ -483,10 +554,12 @@ textarea {
   inset: auto;
   transform: none;
   width: 100%;
+  min-width: 0;
   max-width: 100%;
   max-height: min(17rem, calc(100vh - 7rem));
   --popup-button-size: 2.25rem;
   padding: 0.75rem 0.9rem;
+  background: transparent !important;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -516,7 +589,7 @@ textarea {
   display: flex;
   flex-direction: column;
   width: 100% !important;
-  min-width: 9rem;
+  min-width: 0;
   max-width: 100%;
   margin: 0;
   align-self: start;
@@ -539,7 +612,7 @@ textarea {
 }
 
 .editor-frame .excalidraw .App-menu__left .panelColumn > .dropdown-menu-item {
-  min-width: 11rem;
+  min-width: 7.5rem;
 }
 
 .editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(1) {
@@ -606,7 +679,7 @@ textarea {
 .editor-frame .excalidraw .App-menu__left .panelColumn > label.control-label {
   grid-column: 13 / span 4;
   grid-row: 2;
-  min-width: 16rem;
+  min-width: 9rem;
 }
 
 .editor-frame .excalidraw .App-menu__left .panelColumn > :nth-child(14) {
@@ -632,11 +705,15 @@ textarea {
   max-width: none;
 }
 
+.editor-frame .excalidraw .App-menu__left .range-wrapper {
+  min-width: 14rem;
+}
+
 .editor-frame .excalidraw .App-menu__left .Stack > *,
 .editor-frame .excalidraw .App-menu__left .Stack_vertical > * {
   flex: 0 0 auto;
   width: fit-content;
-  min-width: 9rem;
+  min-width: 0;
   max-width: 100%;
 }
 
@@ -714,6 +791,12 @@ textarea {
 
 .editor-frame .excalidraw .App-menu__left fieldset:has(input[name="arrowheads"]) .buttonList {
   display: grid;
+  grid-template-columns: repeat(4, var(--popup-button-size));
+  width: max-content;
+}
+
+.editor-frame .excalidraw .App-menu__left fieldset:has(input[name="arrowheads"]) {
+  min-width: 18rem;
 }
 
 .editor-frame .excalidraw .App-menu__left fieldset:has(button[title*="Send backward"]) .buttonList,
@@ -761,16 +844,22 @@ textarea {
   }
 
   .editor-frame .excalidraw .App-menu__left {
+    width: 100%;
+    min-width: 0;
     max-height: min(18rem, calc(100vh - 6rem));
     padding: 0.7rem;
   }
 
   .editor-frame .excalidraw .App-menu__left .panelColumn {
+    display: grid !important;
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 0.7rem;
+    width: 100%;
+    min-width: 0;
   }
 
   .editor-frame .excalidraw .App-menu__left .panelColumn > * {
+    width: 100% !important;
     min-width: 8rem;
     max-width: 100%;
     grid-column: span 2;

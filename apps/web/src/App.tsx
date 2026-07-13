@@ -6,7 +6,12 @@ import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import type { AppState } from "@excalidraw/excalidraw/types";
 import type { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import { nanoid } from "nanoid";
-import { copySlideToExcalidrawClipboard, handleClipboardPayload, mergeClipboardElements } from "./clipboard";
+import {
+  copySlideToExcalidrawClipboard,
+  createWrappedTextCardElements,
+  handleClipboardPayload,
+  mergeClipboardElements,
+} from "./clipboard";
 import {
   createEmptyPage,
   createEmptySlide,
@@ -106,10 +111,19 @@ const scenesEqual = (
 const isBlankSlide = (slide: SlideDocument) =>
   getRenderableElements(slide).length === 0 && slide.imports.length === 0;
 
+const tryParseJson = (value: string) => {
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return null;
+  }
+};
+
 export const App = () => {
   const [deck, setDeck] = useState<DeckDocument>(createInitialDeck());
   const [activeSlideId, setActiveSlideId] = useState<string>("");
   const [mermaidDraft, setMermaidDraft] = useState("");
+  const [mermaidError, setMermaidError] = useState<string | null>(null);
   const [isMermaidOpen, setIsMermaidOpen] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -213,6 +227,88 @@ export const App = () => {
     setEditorSceneNonce((value) => value + 1);
   };
 
+  const insertTextCard = (slide: SlideDocument, text: string) => {
+    const textCardElements = createWrappedTextCardElements(slide, text);
+    if (textCardElements.length === 0) {
+      return false;
+    }
+
+    const mergedSlide = mergeClipboardElements(slide, textCardElements);
+    setDeckWithTouch((current) =>
+      updateSlideInDeck(current, slide.id, (currentSlide) =>
+        mergeClipboardElements(currentSlide, textCardElements),
+      ),
+    );
+    syncActiveSlideToEditor(mergedSlide);
+    return true;
+  };
+
+  useEffect(() => {
+    if (!activeSlide) {
+      return;
+    }
+
+    const handleNativePaste = (event: ClipboardEvent) => {
+      if (event.defaultPrevented || isTextInputTarget(event.target)) {
+        return;
+      }
+
+      const target =
+        event.target instanceof Element
+          ? event.target
+          : document.activeElement instanceof Element
+            ? document.activeElement
+            : null;
+
+      if (!target?.closest(".excalidraw")) {
+        return;
+      }
+
+      const text = event.clipboardData?.getData("text/plain")?.trim();
+      if (!text) {
+        return;
+      }
+
+      const parsedJson = tryParseJson(text);
+      if (parsedJson && isExcalidrawScenePayload(parsedJson)) {
+        return;
+      }
+
+      if (extractMermaidDefinition(text)) {
+        return;
+      }
+
+      if (!insertTextCard(activeSlide, text)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+    };
+
+    document.addEventListener("paste", handleNativePaste, true);
+    return () => {
+      document.removeEventListener("paste", handleNativePaste, true);
+    };
+  }, [activeSlide]);
+
+  const showToast = (message: string) => {
+    apiRef.current?.setToast({
+      message,
+      closable: true,
+      duration: 6000,
+    });
+  };
+
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (error instanceof Error && error.message.trim()) {
+      return error.message;
+    }
+
+    return fallback;
+  };
+
   const resetSlideCanvas = (slide: SlideDocument): SlideDocument => {
     const background = getLayoutBackground(slide);
     const base =
@@ -269,18 +365,25 @@ export const App = () => {
     }
 
     const source = extractMermaidDefinition(mermaidDraft) ?? mermaidDraft.trim();
-    const { slide } = await applyMermaidImport(activeSlide, source);
-    setDeckWithTouch((current) =>
-      updateSlideInDeck(current, activeSlide.id, () => slide),
-    );
-    syncActiveSlideToEditor(slide);
-    setMermaidDraft("");
-    setIsMermaidOpen(false);
+    setMermaidError(null);
+
+    try {
+      const { slide } = await applyMermaidImport(activeSlide, source);
+      setDeckWithTouch((current) =>
+        updateSlideInDeck(current, activeSlide.id, () => slide),
+      );
+      syncActiveSlideToEditor(slide);
+      setMermaidDraft("");
+      setIsMermaidOpen(false);
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to import Mermaid diagram.");
+      setMermaidError(message);
+    }
   };
 
-  const handlePaste = async (data: ClipboardData) => {
+  const handlePaste = async (data: ClipboardData, event: ClipboardEvent | null) => {
     if (!activeSlide) {
-      return false;
+      return true;
     }
 
     const action = handleClipboardPayload(data);
@@ -315,7 +418,7 @@ export const App = () => {
             files: (data.files ?? {}) as BinaryFiles,
           },
         });
-        return true;
+        return false;
       }
 
       const mergedSlide = mergeClipboardElements(activeSlide, data.elements ?? [], data.files ?? {});
@@ -325,19 +428,33 @@ export const App = () => {
         ),
       );
       syncActiveSlideToEditor(mergedSlide);
-      return true;
+      return false;
     }
 
     if (action.kind === "mermaid" && action.text) {
-      const { slide } = await applyMermaidImport(activeSlide, action.text);
-      setDeckWithTouch((current) =>
-        updateSlideInDeck(current, activeSlide.id, () => slide),
-      );
-      syncActiveSlideToEditor(slide);
-      return true;
+      try {
+        event?.preventDefault();
+        event?.stopPropagation();
+        const { slide } = await applyMermaidImport(activeSlide, action.text);
+        setDeckWithTouch((current) =>
+          updateSlideInDeck(current, activeSlide.id, () => slide),
+        );
+        syncActiveSlideToEditor(slide);
+        return false;
+      } catch (error) {
+        showToast(getErrorMessage(error, "Failed to import Mermaid diagram."));
+        return false;
+      }
     }
 
-    return false;
+    if (action.kind === "text" && action.text) {
+      event?.preventDefault();
+      event?.stopPropagation();
+      insertTextCard(activeSlide, action.text);
+      return false;
+    }
+
+    return true;
   };
 
   const addPage = () => {
@@ -514,6 +631,21 @@ export const App = () => {
     syncActiveSlideToEditor(resetSlide);
   };
 
+  const resetAllProjectData = () => {
+    if (!hasProjectContent && deck.meta.title === "Untitled project" && deck.slides.length === 1) {
+      return;
+    }
+
+    const resetDeck = createInitialDeck();
+    apiRef.current?.history.clear();
+    setDeck(resetDeck);
+    setActiveSlideId(resetDeck.slides[0]?.id ?? "");
+    setMermaidDraft("");
+    setMermaidError(null);
+    setIsMermaidOpen(false);
+    setEditorSceneNonce((value) => value + 1);
+  };
+
   const copyCurrentSlide = async () => {
     if (!activeSlide) {
       return;
@@ -541,8 +673,14 @@ export const App = () => {
   const workspaceBackground = getLayoutBackground(activeSlide);
   const workspaceTheme = activeSlide.scene.appState?.theme ?? "light";
   const appShellStyle = {
-    "--workspace-bg": workspaceBackground,
-    "--workspace-panel-bg": workspaceBackground,
+    "--workspace-bg":
+      workspaceTheme === "dark"
+        ? `color-mix(in srgb, ${workspaceBackground} 18%, #101215)`
+        : workspaceBackground,
+    "--workspace-panel-bg":
+      workspaceTheme === "dark"
+        ? `color-mix(in srgb, ${workspaceBackground} 10%, #17171c)`
+        : workspaceBackground,
     "--workspace-input-bg":
       workspaceTheme === "dark"
         ? `color-mix(in srgb, ${workspaceBackground} 84%, #101215)`
@@ -787,6 +925,7 @@ export const App = () => {
         <div className="editor-frame">
           <Excalidraw
             key={`${activeSlide.id}:${activeSlide.layout}:${editorSceneNonce}`}
+            name={deck.meta.title}
             excalidrawAPI={(api) => {
               apiRef.current = api;
               setEditorMountNonce((value) => value + 1);
@@ -821,6 +960,12 @@ export const App = () => {
               >
                 Reset the canvas
               </MainMenu.Item>
+              <MainMenu.Item
+                disabled={!hasProjectContent && deck.meta.title === "Untitled project" && deck.slides.length === 1}
+                onClick={resetAllProjectData}
+              >
+                Reset all
+              </MainMenu.Item>
               <MainMenu.Separator />
               <MainMenu.DefaultItems.ToggleTheme />
               <MainMenu.DefaultItems.ChangeCanvasBackground />
@@ -831,27 +976,53 @@ export const App = () => {
       </main>
 
       {isMermaidOpen ? (
-        <div className="modal-backdrop" onClick={() => setIsMermaidOpen(false)}>
+        <div
+          className="modal-backdrop"
+          onClick={() => {
+            setIsMermaidOpen(false);
+            setMermaidError(null);
+          }}
+        >
           <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <div>
                 <p className="eyebrow">Paste Mermaid or AI output</p>
                 <h2>Insert into current page</h2>
               </div>
-              <button type="button" className="ghost" onClick={() => setIsMermaidOpen(false)}>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => {
+                  setIsMermaidOpen(false);
+                  setMermaidError(null);
+                }}
+              >
                 Close
               </button>
             </div>
             <textarea
               value={mermaidDraft}
-              onChange={(event) => setMermaidDraft(event.target.value)}
+              onChange={(event) => {
+                setMermaidDraft(event.target.value);
+                if (mermaidError) {
+                  setMermaidError(null);
+                }
+              }}
               placeholder={"```mermaid\nflowchart TD\n  A[Idea] --> B[Slide]\n```"}
             />
+            {mermaidError ? <p className="error-text">{mermaidError}</p> : null}
             <div className="button-row">
               <button type="button" onClick={handleMermaidSubmit}>
                 Insert Mermaid
               </button>
-              <button type="button" className="ghost" onClick={() => setMermaidDraft("")}>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => {
+                  setMermaidDraft("");
+                  setMermaidError(null);
+                }}
+              >
                 Clear
               </button>
             </div>
